@@ -1,0 +1,6 @@
+
+这个文件夹里的几个脚本是用来管理曲库的。现在可用的流程是先把曲库的路径填到type_convert.py的常数设置里，然后再运行tag_parsing.py。
+
+type_convert会无差别把所有乱七八糟的下载格式都转成mp3，tag_parsing会把“title - artists,artist,etc. ”的文件名转化为metadata标签。其他的还没写完
+
+文件夹里的三首歌是测试用的，但是因为我自己之前已经测试过了，然后误操作，导致这几首歌已经是格式和标签都处理好的状态
