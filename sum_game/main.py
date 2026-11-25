@@ -129,12 +129,7 @@ def updateboard(remove_box, before_board):
             if row[col_index] != 0:
                 score_boost += COMBO_BOOST
                 row[col_index] = 0
-    non_empty = False
-    while not non_empty:
-        for i in before_board:
-            for j in i:
-                if j != 0:
-                    non_empty = True
+    non_empty = any(i != 0 for row in before_board for i in row)
     if non_empty:
         return before_board, 1, score_boost + 4
     else:
