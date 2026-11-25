@@ -4,7 +4,6 @@ from mutagen.easyid3 import EasyID3
 
 TYPE = ".mp3"
 
-
 def name_parsing(pars_path, suff_unified):
     # extract the name and artist
     song = pars_path.name.removesuffix(suff_unified)
@@ -34,6 +33,7 @@ def main(target, uniform_type):
     workingdesk = Path(target) / "tag_processed"
     hold_err = []
     hold_uncertain = []
+    success_count = 0
     for i in tc.walkthrough(workingdesk):
         # walk through each media files
         title, artists, flag = name_parsing(i, uniform_type)
@@ -42,22 +42,26 @@ def main(target, uniform_type):
             try:
                 tag_attaching(i, title, artists)
                 # attach the desired information to ID3 tags.
+                success_count += 1
             except Exception:
                 hold_err.append(i)
         else:
             hold_uncertain.append(i)
     # casting report
-    print(f"auto parsing completed. Need manually settlement: {len(hold_uncertain)}")
+    print(f"\nauto parsing completed for {success_count}. "
+          f"Need manually settlement: {len(hold_uncertain)}")
     for j in hold_uncertain:
         print(j)
         manu_title = input("\n  please enter the title: ")
-        manu_artis = input("    please enter the artists, separate with comma: ")
+        manu_artis = input("  please enter the artist(s), separate with comma: ")
         try:
             tag_attaching(j, manu_title, manu_artis)
         except Exception:
             hold_err.append(j)
-    print(f"\nprocess completed. Failed cases toll: {len(hold_err)}.\n    {hold_err}")
+    print(f"\nTagging completed. Failed cases toll: {len(hold_err)}.\n    {hold_err}")
+
 
 
 if __name__ == "__main__":
     main(tc.TARGET, TYPE)
+

@@ -1,15 +1,19 @@
 from pathlib import Path
 import subprocess
 
-# TARGET = "/home/lan-yang/Music/tag_parsing"
-TARGET = "/mnt/bighouse/Music/Pure"
 FILTER = {".mp3", ".wav", ".flac", ".aac", ".ogg", ".m4a",
           ".wma", ".opus", ".aiff", ".alac", ".mp4", ".webm"}
-
+SIGNATURES = [b"ID3", b"\xff\xfb", b"\xff\xf3", b"\xff\xf2"]
+TARGET = "/home/lan-yang/Music/tag_parsing"
 
 def is_media(check_path):
     # give a rough filter, only return true for music format
     return check_path.suffix.lower() in FILTER
+
+def is_mp3(music_path):
+    with music_path.open("rb") as f:
+        head = f.read(3)
+    return any(head.startswith(sig) for sig in SIGNATURES)
 
 def walkthrough(target_path):
     # walk through the target directory, only returns media files
@@ -41,24 +45,41 @@ def convert(input_file_path, output_path):
     message = process_run.stderr
     return result, message
 
-def main(target):
+def main(target, safe_mode):
+    """
+    :param target: Path of the base folder, contains "type_dirty/" and "tag_processed/" sub-
+    directories. musics before type align are in "type_dirty/".
+    :param safe_mode: boolean, true means check before conversion (do not convert real .mp3
+    files, just move them), false means just convert every file.
+    :return: none.
+    """
     success_count = 0
-    failed_log = {}
+    all_failed = {}
+    in_path = Path(target) / "type_dirty"
     out_path = Path(target) / "tag_processed"
     out_path.mkdir(parents=True, exist_ok=True)
-    for i in walkthrough(target):
-        # walk through every media file
-        success, failed = convert(i, out_path)
-        # convert into mp3
-        if success:
-            success_count += 1
+    for i in walkthrough(in_path):
+        if safe_mode:
+            if not is_mp3(i):
+                success, err_log = convert(i, out_path)
+                if success:
+                    success_count += 1
+                else:
+                    all_failed[str(i)] = err_log.strip()
+            else:
+                i = i.rename(out_path / i.name)
+                success_count += 1
         else:
-            failed_log[str(i)] = failed.strip()
-    # casting report
-    print(f"process complete. Successfully converted: {success_count}")
-    if failed_log:
-        print(failed_log)
+            success, err_log = convert(i, out_path)
+            if success:
+                success_count += 1
+            else:
+                all_failed[str(i)] = err_log.strip()
+    print(f"\nConversion complete. Successfully converted: {success_count}")
+    if all_failed:
+        print(all_failed)
 
 
 if __name__ == "__main__":
-    main(TARGET)
+    main(TARGET, True)
+
